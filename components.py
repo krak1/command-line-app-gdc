@@ -8,23 +8,150 @@ def help():
 	print("$ ./task done INDEX          # Mark the incomplete item with the given index as complete")
 	print("$ ./task help                # Show usage")
 	print("$ ./task report              # Statistics")
+	# print("$ ./task reset               # Reset the list (delete all items and history)")
+
 
 def list():
-	pass
+	#opening the database using shelve moduel
+	#All the tasks are stored under the key 'task'
+	r = shelve.open('task.db')
+	tasks_list = r['task'] 
+	r.close()
+
+	#iterating and printing the tasks
+	for count, task_string in enumerate(tasks_list, 1):
+		task = task_string[2:]
+		priority = int(task_string[:2])
+		print(str(count)+". "+task + " ["+str(priority)+"]")
+
+
 
 def report():
-	pass
+	#getting list of tasks
+	#opening the done list
+	r = shelve.open('task.db')
+	tasks_list = r['task']
+	done_list = r['done']
+
+	#getting the no. of tasks not done and done
+	task_len = len(tasks_list)
+	done_len = len(done_list)
+
+	#printing the report
+	
+	print("Pending :", task_len)
+	#iterating and printing the tasks_list
+	for count, task_string in enumerate(tasks_list, 1):
+		task = task_string[2:]
+		priority = int(task_string[:2])
+		print(str(count)+". "+task + " ["+str(priority)+"]")
+
+	print("\nCompleted :", done_len)
+	#iterating and printing the done_list
+	for count, done_string in enumerate(done_list, 1):
+		task = done_string[2:]
+		print(str(count)+". "+task)
+
+
 
 def delete(num):
-	pass
+
+	#geting list from database
+	r = shelve.open('task.db')
+	tasks_list = r['task']
+	#checking if the number is valid
+	if len(tasks_list) < num:
+		error("item with index "+str(num)+" does not exist. Nothing deleted.")
+	
+	#removing the particular task
+	tasks_list = tasks_list[:num]+tasks_list[num+1:]
+	
+	#updating the database under the specified key
+	r['task'] = tasks_list
+	r.close()
+
+	print("Deleted item with index", num)
+
 
 def done(num):
-	pass
+
+	#getting list of tasks
+	r = shelve.open('task.db')
+	tasks_list = r['task']
+	
+	#checking the validity of num
+	if len(tasks_list) < num:
+		error("no incomplete item with index "+str(num)+" exists.")
+	
+	#all the completed items are stored in the database under the key 'done'
+	#opening the done list
+	done_list = r['done']
+
+	#updating the done_list and task_list
+	done_list.append(tasks_list[num-1])
+	tasks_list = tasks_list[:num]+tasks_list[num+1:]
+
+	#updating the database
+	r['task'] = tasks_list
+	r['done'] = done_list
+	r.close()
+
+	print("Marked item as done.")
+
 
 def add(priority, task):
+
+	#getting the task_list
 	r = shelve.open('task.db')
-	print(r['task'])
+	tasks_list = r['task']
+
+	#generating the task string
+	#([PRIORITY][TASK]) this is how it is store in the database
+	if priority < 10:
+		task_string = "0" + str(priority) + task
+	elif priority < 100:
+		task_string = str(priority) + task
+	else:
+		error(" PRIORITY should be between 0-100 ")
+
+	#adding the new task at the right position in the task_list
+	added = False
+	for i in range(len(tasks_list)):
+		itr_task = tasks_list[i]
+
+		if priority > int(itr_task[:2]):
+			continue
+		else:
+			tasks_list = tasks_list[0:i] + [task_string] + tasks_list[i:]
+			added = True
+			break;
+	#if not added add at the last
+	if not added:
+		tasks_list.append(task_string)
+
+	#updating the database
+	r['task'] = tasks_list
+	r.close()
+
+	print("Added task: "+task+" with priority "+str(priority))
 
 
-def error():
-	pass
+def reset():
+	#deletes the lists under the given keys
+	r = shelve.open('task.db')
+	r['task'] = []
+	r['done'] = []
+	r.close()
+
+	print("The list reset was successful")
+
+
+def error(message=None):
+
+	if message is not None:
+		print("Error:" +message)
+	else:
+		print("Invalid !\n")
+		help()
+	#program will end when the error function is called
+	exit()
