@@ -86,7 +86,11 @@ test("list tasks in order of priority", () => {
   expect(received).toEqual(expect.stringContaining(expected));
 });
 
+// ***THIS IS WHERE THE EDIT HAS BEEN MADE***
 test("list when there are no remaining tasks", () => {
+  // THIS LINE WAS ADDED:
+  [3, 2, 1].forEach((n) => execSync(tasksTxtCli("del", n.toString())))
+
   let expected = `There are no pending tasks!`;
   let received = execSync(tasksTxtCli("ls")).toString("utf8");
 
