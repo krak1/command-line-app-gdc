@@ -12,3 +12,7 @@
    ```
 4. To do multiple tests, clear the list using the above reset command to avoid testcase errors.
 5. If the `task.db` file is not presen. use the same reset command to initialize it.
+6. Use the following command for more help.
+    ```
+    .\task.sh help
+    ```
